@@ -15,20 +15,26 @@ const PORT = ENV_VARS.PORT;
 
 const __dirname = path.resolve();
 
-// ✅ Updated CORS Configuration
+// ✅ Fix: Proper CORS Configuration
 const allowedOrigins = [
-    "http://localhost:5173",  // Local development
-    "https://mern-netflix-clone-jgig.onrender.com" // Render deployed frontend
+    "http://localhost:5173",  
+    "https://mern-netflix-clone-jgig.onrender.com" // Render Frontend URL
 ];
 
 app.use(cors({
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true,
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// ✅ Handle preflight requests properly
+// ✅ Fix: Allow Preflight Requests
 app.options("*", cors());
 
 // Middleware
