@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { create } from "zustand";
 
 // Base API URL (Use VITE for easy environment switching)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://mern-netflix-clone-backend.onrender.com/api/v1/auth"; // Update backend URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://mern-netflix-clone-backend.onrender.com/api/v1/auth";
 
 export const useAuthStore = create((set) => ({
     user: null,
@@ -16,12 +16,11 @@ export const useAuthStore = create((set) => ({
     signup: async (credentials) => {
         try {
             set({ isSigningUp: true });
-            const response = await axios.post(`${API_BASE_URL}/signup`, credentials, { withCredentials: true });
-            set({ user: response.data.user, isSigningUp: false });
+            const { data } = await axios.post(`${API_BASE_URL}/signup`, credentials, { withCredentials: true });
+            set({ user: data.user, isSigningUp: false });
             toast.success("🎉 Account created successfully!");
         } catch (error) {
-            console.error("Signup Error:", error.response?.data || error.message);
-            toast.error(error.response?.data?.message || "❌ Signup failed");
+            handleAuthError(error, "Signup failed");
             set({ isSigningUp: false });
         }
     },
@@ -30,12 +29,11 @@ export const useAuthStore = create((set) => ({
     login: async (credentials) => {
         try {
             set({ isLoggingIn: true });
-            const response = await axios.post(`${API_BASE_URL}/login`, credentials, { withCredentials: true });
-            set({ user: response.data.user, isLoggingIn: false });
+            const { data } = await axios.post(`${API_BASE_URL}/login`, credentials, { withCredentials: true });
+            set({ user: data.user, isLoggingIn: false });
             toast.success("✅ Logged in successfully!");
         } catch (error) {
-            console.error("Login Error:", error.response?.data || error.message);
-            toast.error(error.response?.data?.message || "❌ Login failed");
+            handleAuthError(error, "Login failed");
             set({ isLoggingIn: false });
         }
     },
@@ -48,8 +46,7 @@ export const useAuthStore = create((set) => ({
             set({ user: null, isLoggingOut: false });
             toast.success("👋 Logged out successfully!");
         } catch (error) {
-            console.error("Logout Error:", error.response?.data || error.message);
-            toast.error(error.response?.data?.message || "❌ Logout failed");
+            handleAuthError(error, "Logout failed");
             set({ isLoggingOut: false });
         }
     },
@@ -58,11 +55,17 @@ export const useAuthStore = create((set) => ({
     authCheck: async () => {
         try {
             set({ isCheckingAuth: true });
-            const response = await axios.get(`${API_BASE_URL}/authCheck`, { withCredentials: true });
-            set({ user: response.data.user, isCheckingAuth: false });
+            const { data } = await axios.get(`${API_BASE_URL}/authCheck`, { withCredentials: true });
+            set({ user: data.user, isCheckingAuth: false });
         } catch (error) {
-            console.error("Auth Check Error:", error.response?.data || error.message);
+            handleAuthError(error, "Authentication check failed");
             set({ isCheckingAuth: false, user: null });
         }
     },
 }));
+
+// ✅ Error Handling Function
+const handleAuthError = (error, defaultMessage) => {
+    console.error(`${defaultMessage}:`, error.response?.data || error.message);
+    toast.error(error.response?.data?.message || `❌ ${defaultMessage}`);
+};
