@@ -17,8 +17,9 @@ const __dirname = path.resolve();
 
 // ✅ Fix: Proper CORS Configuration
 const allowedOrigins = [
-    "http://localhost:5173",  
-    "https://mern-netflix-clone-jgig.onrender.com" // Render Frontend URL
+    "http://localhost:5173", // Local development
+    "https://mern-netflix-clone-jgig.onrender.com", // Render Frontend URL
+    // Add other frontend URLs if needed
 ];
 
 app.use(cors({
@@ -34,7 +35,7 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// ✅ Fix: Allow Preflight Requests
+// ✅ Fix: Allow Preflight Requests for All Routes
 app.options("*", cors());
 
 // Middleware
@@ -54,6 +55,7 @@ app.use("/api/v1/tv", protectRoute, tvRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/search", protectRoute, searchRoutes);
 
+// Serve Frontend in Production
 if (ENV_VARS.NODE_ENV === "production") {
     app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
@@ -69,6 +71,12 @@ app.get("/api/v1/auth/authCheck", (req, res) => {
         return res.status(401).json({ message: "❌ No token found in cookies!" });
     }
     res.json({ message: "✅ Token exists!", token });
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error("❌ Error:", err.message);
+    res.status(500).json({ message: "Internal Server Error" });
 });
 
 // Server Initialization
