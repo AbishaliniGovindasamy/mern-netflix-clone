@@ -1,47 +1,65 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import { protectRoute } from "./middleware/protectRoute.js";
 import authRoutes from "./routes/auth.route.js";
+import movieRoutes from "./routes/movie.route.js";
+import tvRoutes from "./routes/tv.route.js";
+import searchRoutes from "./routes/search.route.js";
+import { ENV_VARS } from "./config/envVars.js";
 import { connectDB } from "./config/db.js";
+import path from "path";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = ENV_VARS.PORT;
 
-const allowedOrigins = [
-    "http://localhost:5173", 
-    "https://mern-netflix-clone-jgig.onrender.com" // ✅ Your frontend domain
-];
+const __dirname = path.resolve();
 
-// ✅ Properly configure CORS
+// Middleware Setup
 app.use(cors({
-    origin: allowedOrigins,
+    origin: "https://mern-netflix-clone-jgig.onrender.com",
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
 }));
-
-// ✅ Handle Preflight Requests
-app.options("*", cors());
-
-// Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ Debugging: Log incoming requests
+// Request Logger
 app.use((req, res, next) => {
-    console.log("🔹 Request Origin:", req.headers.origin);
-    console.log("🔹 Request Method:", req.method);
+    console.log("🔹 Incoming Request:", req.method, req.url);
+    console.log("🔹 Cookies:", req.cookies);
     next();
 });
 
-// Routes
+// API Routes
+app.use("/api/v1/movie",protectRoute, movieRoutes);
+app.use("/api/v1/tv",protectRoute, tvRoutes);
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/search", protectRoute, searchRoutes);
 
+
+if(ENV_VARS.NODE_ENV === "production"){
+    app.use(express.static(path.join(__dirname,"/frontend/dist")));
+
+    app.get('*',(req,res) =>{
+        res.sendFile(path.resolve(__dirname, "frontend","dist","index.html"));
+    })
+}
+
+// Auth Check Endpoint
+app.get("/api/v1/auth/authCheck", (req, res) => {
+    const token = req.cookies["jwt-netflix"];
+    if (!token) {
+        return res.status(401).json({ message: "❌ No token found in cookies!" });
+    }
+    res.json({ message: "✅ Token exists!", token });
+});
+
+// Server Initialization
 app.listen(PORT, async () => {
     try {
         await connectDB();
-        console.log(`🚀 Server running on port ${PORT}`);
+        console.log(`🚀 Server Started At http://localhost:${PORT}`);
     } catch (error) {
-        console.error("❌ Database connection error:", error);
+        console.error("❌ Error connecting to database:", error);
     }
 });
