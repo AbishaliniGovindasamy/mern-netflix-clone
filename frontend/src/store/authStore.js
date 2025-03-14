@@ -3,7 +3,16 @@ import toast from "react-hot-toast";
 import { create } from "zustand";
 
 // Base API URL (Use VITE for easy environment switching)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://mern-netflix-clone-backend.onrender.com/api/v1/auth";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://mern-netflix-clone-backend.onrender.com/api/v1";
+
+// Create an axios instance with default config
+const api = axios.create({
+    baseURL: API_BASE_URL,
+    withCredentials: true,
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
 
 export const useAuthStore = create((set) => ({
     user: null,
@@ -16,7 +25,7 @@ export const useAuthStore = create((set) => ({
     signup: async (credentials) => {
         try {
             set({ isSigningUp: true });
-            const { data } = await axios.post(`${API_BASE_URL}/signup`, credentials, { withCredentials: true });
+            const { data } = await api.post("/auth/signup", credentials);
             set({ user: data.user, isSigningUp: false });
             toast.success("🎉 Account created successfully!");
         } catch (error) {
@@ -29,7 +38,7 @@ export const useAuthStore = create((set) => ({
     login: async (credentials) => {
         try {
             set({ isLoggingIn: true });
-            const { data } = await axios.post(`${API_BASE_URL}/login`, credentials, { withCredentials: true });
+            const { data } = await api.post("/auth/login", credentials);
             set({ user: data.user, isLoggingIn: false });
             toast.success("✅ Logged in successfully!");
         } catch (error) {
@@ -42,7 +51,7 @@ export const useAuthStore = create((set) => ({
     logout: async () => {
         try {
             set({ isLoggingOut: true });
-            await axios.post(`${API_BASE_URL}/logout`, {}, { withCredentials: true });
+            await api.post("/auth/logout", {});
             set({ user: null, isLoggingOut: false });
             toast.success("👋 Logged out successfully!");
         } catch (error) {
@@ -55,10 +64,11 @@ export const useAuthStore = create((set) => ({
     authCheck: async () => {
         try {
             set({ isCheckingAuth: true });
-            const { data } = await axios.get(`${API_BASE_URL}/authCheck`, { withCredentials: true });
+            const { data } = await api.get("/auth/authCheck");
             set({ user: data.user, isCheckingAuth: false });
         } catch (error) {
-            handleAuthError(error, "Authentication check failed");
+            // Don't show toast for auth check failures as it's a background operation
+            console.error("Authentication check failed:", error.response?.data || error.message);
             set({ isCheckingAuth: false, user: null });
         }
     },
