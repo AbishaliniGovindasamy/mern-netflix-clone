@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { create } from "zustand";
 
 // Base API URL (Use VITE for easy environment switching)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1/auth";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://mern-netflix-clone-backend.onrender.com/api/v1/auth"; // Update backend URL
 
 export const useAuthStore = create((set) => ({
     user: null,

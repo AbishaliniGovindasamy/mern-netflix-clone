@@ -15,11 +15,23 @@ const PORT = ENV_VARS.PORT;
 
 const __dirname = path.resolve();
 
-// Middleware Setup
+// ✅ Updated CORS Configuration
+const allowedOrigins = [
+    "http://localhost:5173",  // Local development
+    "https://mern-netflix-clone-jgig.onrender.com" // Render deployed frontend
+];
+
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: allowedOrigins,
     credentials: true,
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
 }));
+
+// ✅ Handle preflight requests properly
+app.options("*", cors());
+
+// Middleware
 app.use(express.json());
 app.use(cookieParser());
 
@@ -31,18 +43,17 @@ app.use((req, res, next) => {
 });
 
 // API Routes
-app.use("/api/v1/movie",protectRoute, movieRoutes);
-app.use("/api/v1/tv",protectRoute, tvRoutes);
+app.use("/api/v1/movie", protectRoute, movieRoutes);
+app.use("/api/v1/tv", protectRoute, tvRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/search", protectRoute, searchRoutes);
 
+if (ENV_VARS.NODE_ENV === "production") {
+    app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
-if(ENV_VARS.NODE_ENV === "production"){
-    app.use(express.static(path.join(__dirname,"/frontend/dist")));
-
-    app.get('*',(req,res) =>{
-        res.sendFile(path.resolve(__dirname, "frontend","dist","index.html"));
-    })
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+    });
 }
 
 // Auth Check Endpoint
