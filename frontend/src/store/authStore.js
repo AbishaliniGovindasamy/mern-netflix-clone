@@ -54,11 +54,11 @@ export const useAuthStore = create((set) => ({
         }
     },
 
-    // ✅ Authentication Check Function
+    // ✅ Authentication Check Function (FIXED)
     authCheck: async () => {
         try {
             set({ isCheckingAuth: true });
-            const response = await axios.get(`${API_BASE_URL}/authCheck`, { withCredentials: true });
+            const response = await axios.get(`${API_BASE_URL}/check`, { withCredentials: true }); // ✅ Fixed endpoint
             set({ user: response.data.user, isCheckingAuth: false });
         } catch (error) {
             console.error("Auth Check Error:", error.response?.data || error.message);
